@@ -1,1 +1,42 @@
-{% extends 'base.html' %}{% block title %}Current Match · Rickshaw Share{% endblock %}{% block content %}<div class="page-head"><div><span class="eyebrow">MATCH DETAILS</span><h1>{{ other_ride.user.name }}</h1></div><span class="badge {{ match.status }}">{{ match.status }}</span></div><section class="card"><div class="big-score">{{ '%.0f'|format(match.match_probability*100) }}% <small>AI match probability</small></div><div class="route"><div><b>Their pickup</b><span>{{ other_ride.pickup_name }}</span></div><div><b>Their destination</b><span>{{ other_ride.destination_name }}</span></div></div><div class="metrics"><span><b>{{ '%.2f'|format(match.pickup_distance_km) }} km</b> pickups</span><span><b>{{ '%.0f'|format(match.time_difference_min) }} min</b> time gap</span><span><b>{{ '%.0f'|format(match.route_overlap_percent) }}%</b> overlap</span><span><b>{{ '%.2f'|format(match.estimated_detour_km) }} km</b> detour</span></div>{% if match.status=='pending' and match.ride_2.user_id==current_user.user_id %}<div class="actions"><form method="post" action="{{ url_for('accept_match',match_id=match.match_id) }}"><button>Accept match</button></form><form method="post" action="{{ url_for('reject_match',match_id=match.match_id) }}"><button class="danger">Reject</button></form></div>{% elif match.status=='pending' %}<p class="notice">Waiting for {{ other_ride.user.name }} to respond.</p>{% elif match.status=='accepted' %}<p class="notice success">Confirmed — coordinate your pickup and enjoy the shared ride.</p>{% endif %}</section>{% endblock %}
+{% extends 'base.html' %}
+{% block title %}Current match - Rickshaw Share{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><span class="eyebrow">MATCH DETAILS</span><h1>{{ other_ride.user.name }}</h1></div>
+  <span class="badge {{ match.status }}">{{ match.status }}</span>
+</div>
+<section class="card">
+  <div class="big-score">{{ '%.0f'|format(match.match_probability*100) }}% <small>AI match probability</small></div>
+  <div class="route">
+    <div><b>Their pickup</b><span>{{ other_ride.pickup_name }}</span></div>
+    <div><b>Their destination</b><span>{{ other_ride.destination_name }}</span></div>
+  </div>
+  <div class="metrics">
+    <span><b>{{ '%.2f'|format(match.pickup_distance_km) }} km</b> between pickups</span>
+    <span><b>{{ '%.0f'|format(match.time_difference_min) }} min</b> time apart</span>
+    <span><b>{{ '%.0f'|format(match.route_overlap_percent) }}%</b> route overlap</span>
+    <span><b>{{ '%.2f'|format(match.estimated_detour_km) }} km</b> estimated detour</span>
+  </div>
+  {% if match.status == 'pending' and match.ride_2.user_id == current_user.user_id %}
+    <p class="notice">A passenger sent you this request. Review the details and choose whether to accept.</p>
+    <div class="actions">
+      <form method="post" action="{{ url_for('accept_match',match_id=match.match_id) }}"><button>Accept match</button></form>
+      <form method="post" action="{{ url_for('reject_match',match_id=match.match_id) }}"><button class="danger">Reject</button></form>
+    </div>
+  {% elif match.status == 'pending' %}
+    <p class="notice">Request sent. Waiting for {{ other_ride.user.name }} to respond. This page checks for a response automatically.</p>
+  {% elif match.status == 'accepted' %}
+    <p class="notice success">Confirmed! Coordinate your pickup and enjoy the shared ride.</p>
+  {% elif match.status == 'rejected' %}
+    <p class="notice">This request was declined. You can return to your dashboard to find another passenger.</p>
+  {% else %}
+    <p class="notice">This request is no longer active.</p>
+  {% endif %}
+  <div class="actions"><a class="button secondary" href="{{ url_for('dashboard') }}">Back to dashboard</a></div>
+</section>
+{% endblock %}
+{% block scripts %}
+{% if match.status == 'pending' %}
+<script>window.setTimeout(() => window.location.reload(), 10000);</script>
+{% endif %}
+{% endblock %}

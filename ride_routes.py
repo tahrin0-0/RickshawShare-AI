@@ -82,6 +82,9 @@ def register_ride_routes(app):
     @login_required
     def match_results(ride_id):
         ride = get_owned_ride(ride_id)
+        pending_match = _pending_match_for(ride)
+        if pending_match:
+            return redirect(url_for("current_match", match_id=pending_match.match_id))
         if ride.status == "waiting":
             results, diagnostics = find_matches(ride, with_diagnostics=True)
         else:

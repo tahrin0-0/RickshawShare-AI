@@ -1,1 +1,41 @@
-{% extends 'base.html' %}{% block title %}Dashboard · Rickshaw Share{% endblock %}{% block content %}<div class="page-head"><div><span class="eyebrow">DASHBOARD</span><h1>Hello, {{ current_user.name }}</h1></div>{% if not ride %}<a class="button" href="{{ url_for('create_ride') }}">+ Create ride</a>{% endif %}</div>{% if ride %}<section class="card"><div class="status-row"><h2>Current ride</h2><span class="badge {{ ride.status }}">{{ ride.status }}</span></div><div class="route"><div><b>Pickup</b><span>{{ ride.pickup_name }}</span></div><div><b>Destination</b><span>{{ ride.destination_name }}</span></div></div><p>🕐 {{ ride.preferred_time.strftime('%d %b %Y, %I:%M %p') }} · Preference: {{ ride.gender_preference|title }}</p><div class="actions">{% if ride.status=='waiting' %}<a class="button" href="{{ url_for('match_results',ride_id=ride.ride_id) }}">Find matches</a>{% endif %}{% if current_match %}<a class="button secondary" href="{{ url_for('current_match',match_id=current_match.match_id) }}">Current match</a>{% endif %}<form method="post" action="{{ url_for('cancel_ride',ride_id=ride.ride_id) }}" onsubmit="return confirm('Cancel this ride?')"><button class="danger">Cancel ride</button></form></div></section>{% else %}<section class="empty"><span>📍</span><h2>No active ride</h2><p>Create a request to start finding compatible passengers.</p><a class="button" href="{{ url_for('create_ride') }}">Create ride request</a></section>{% endif %}{% endblock %}
+{% extends 'base.html' %}
+{% block title %}Dashboard - Rickshaw Share{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><span class="eyebrow">DASHBOARD</span><h1>Hello, {{ current_user.name }}</h1></div>
+  {% if not ride %}<a class="button" href="{{ url_for('create_ride') }}">+ Create ride</a>{% endif %}
+</div>
+{% if ride %}
+  <section class="card">
+    <div class="status-row"><h2>Current ride</h2><span class="badge {{ ride.status }}">{{ ride.status }}</span></div>
+    <div class="route">
+      <div><b>Pickup</b><span>{{ ride.pickup_name }}</span></div>
+      <div><b>Destination</b><span>{{ ride.destination_name }}</span></div>
+    </div>
+    <p>{{ ride.preferred_time.strftime('%d %b %Y, %I:%M %p') }} · Preference: {{ ride.gender_preference|title }}</p>
+    {% if current_match and current_match.status == 'pending' and current_match.ride_2_id == ride.ride_id %}
+      <div class="notice"><b>New passenger request</b><p>Someone wants to share this ride. Review the route and accept or reject.</p>
+        <a class="button" href="{{ url_for('current_match',match_id=current_match.match_id) }}">Review request</a></div>
+    {% elif current_match and current_match.status == 'pending' %}
+      <p class="notice">Your request has been sent. We will check for the passenger's response while this page stays open.</p>
+    {% elif current_match and current_match.status == 'accepted' %}
+      <p class="notice success">Your shared ride is confirmed.</p>
+    {% endif %}
+    <div class="actions">
+      {% if ride.status == 'waiting' %}<a class="button" href="{{ url_for('match_results',ride_id=ride.ride_id) }}">Find matches</a>{% endif %}
+      {% if current_match %}<a class="button secondary" href="{{ url_for('current_match',match_id=current_match.match_id) }}">View match</a>{% endif %}
+      <form method="post" action="{{ url_for('cancel_ride',ride_id=ride.ride_id) }}" onsubmit="return confirm('Cancel this ride?')"><button class="danger">Cancel ride</button></form>
+    </div>
+  </section>
+{% else %}
+  <section class="empty"><span>📍</span><h2>No active ride</h2><p>Create a request to start finding compatible passengers.</p>
+    <a class="button" href="{{ url_for('create_ride') }}">Create ride request</a></section>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+{% if ride and ride.status == 'waiting' and not current_match %}
+<script>window.setTimeout(() => window.location.reload(), 10000);</script>
+{% elif current_match and current_match.status == 'pending' %}
+<script>window.setTimeout(() => window.location.reload(), 10000);</script>
+{% endif %}
+{% endblock %}

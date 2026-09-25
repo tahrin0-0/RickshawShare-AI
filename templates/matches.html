@@ -58,3 +58,8 @@
   </section>
 {% endif %}
 {% endblock %}
+{% block scripts %}
+{% if ride.status == 'waiting' %}
+<script>window.setTimeout(() => window.location.reload(), 10000);</script>
+{% endif %}
+{% endblock %}
