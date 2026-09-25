@@ -1,1 +1,70 @@
-{% extends 'base.html' %}{% block title %}Create Ride · Rickshaw Share{% endblock %}{% block head %}<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">{% endblock %}{% block content %}<div class="page-head"><div><span class="eyebrow">NEW REQUEST</span><h1>Where are you going?</h1><p>Search or click the map: first pickup, then destination.</p></div></div><form method="post" class="ride-grid card"><div><label>Pickup<input id="pickup_name" name="pickup_name" placeholder="Search a place" required></label><button class="secondary small" type="button" data-search="pickup">Find pickup</button><label>Destination<input id="destination_name" name="destination_name" placeholder="Search a place" required></label><button class="secondary small" type="button" data-search="destination">Find destination</button><label>Preferred travel time<input type="datetime-local" name="preferred_time" required></label><label>Sharing preference<select name="gender_preference" required><option value="any">Any gender</option><option value="female">Female passengers</option><option value="male">Male passengers</option><option value="other">Other</option></select></label><input type="hidden" id="pickup_latitude" name="pickup_latitude"><input type="hidden" id="pickup_longitude" name="pickup_longitude"><input type="hidden" id="destination_latitude" name="destination_latitude"><input type="hidden" id="destination_longitude" name="destination_longitude"><button id="submitRide" disabled>Create and find matches</button><small id="mapHint">Select both map points to continue.</small></div><div id="map"></div></form>{% endblock %}{% block scripts %}<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="{{ url_for('static',filename='js/map.js') }}"></script>{% endblock %}
+{% extends 'base.html' %}
+{% block title %}Create a ride - Rickshaw Share{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><span class="eyebrow">NEW RIDE</span><h1>Where are you going?</h1>
+    <p>Choose the exact pickup and destination on the map.</p></div>
+</div>
+<form method="post" class="ride-grid card" id="rideForm">
+  <div class="ride-form-fields">
+    <div class="step-label"><span>1</span><b>Choose your pickup</b></div>
+    <label for="pickup_name">Search a place in Bangladesh</label>
+    <div class="location-search">
+      <input id="pickup_name" name="pickup_name" placeholder="For example: UIU, United City, Dhaka" autocomplete="off" required>
+      <button class="secondary" type="button" data-search="pickup">Search</button>
+    </div>
+    <div class="search-results" id="pickup_results" aria-live="polite"></div>
+    <div class="location-actions">
+      <button class="pin-select" type="button" data-map-target="pickup">Choose pickup on map</button>
+      <button class="pin-select" type="button" data-use-location="pickup">Use my current location</button>
+    </div>
+    <p class="selected-location" id="pickup_selected">Pickup not selected yet</p>
+
+    <div class="step-label"><span>2</span><b>Choose your destination</b></div>
+    <label for="destination_name">Search a place in Bangladesh</label>
+    <div class="location-search">
+      <input id="destination_name" name="destination_name" placeholder="For example: Badda Link Road, Dhaka" autocomplete="off" required>
+      <button class="secondary" type="button" data-search="destination">Search</button>
+    </div>
+    <div class="search-results" id="destination_results" aria-live="polite"></div>
+    <div class="location-actions">
+      <button class="pin-select" type="button" data-map-target="destination">Choose destination on map</button>
+      <button class="pin-select" type="button" data-use-location="destination">Use my current location</button>
+    </div>
+    <p class="selected-location" id="destination_selected">Destination not selected yet</p>
+
+    <div class="step-label"><span>3</span><b>Set your travel details</b></div>
+    <label for="preferred_time">When do you want to travel?</label>
+    <input id="preferred_time" type="datetime-local" name="preferred_time" required>
+    <small>To match, passengers need pickup points within 5 km and travel times within 30 minutes.</small>
+    <label for="gender_preference">Who are you comfortable sharing with?</label>
+    <select id="gender_preference" name="gender_preference" required>
+      <option value="any">Anyone</option><option value="female">Women only</option>
+      <option value="male">Men only</option><option value="other">Other</option>
+    </select>
+    <input type="hidden" id="pickup_latitude" name="pickup_latitude">
+    <input type="hidden" id="pickup_longitude" name="pickup_longitude">
+    <input type="hidden" id="destination_latitude" name="destination_latitude">
+    <input type="hidden" id="destination_longitude" name="destination_longitude">
+    <button id="submitRide" disabled>Create ride and find matches</button>
+    <p class="form-hint" id="mapHint">Select a pickup and destination to continue.</p>
+  </div>
+  <div class="map-panel">
+    <div class="map-help"><b>Map</b><span id="mapTargetHint">Choose a pickup or destination above, then click the map.</span></div>
+    <div id="map"></div>
+  </div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="{{ url_for('static',filename='js/map.js') }}?v=4"></script>
+<script>
+  const travelInput = document.getElementById('preferred_time');
+  const minimumTravelTime = new Date(Date.now() - new Date().getTimezoneOffset() * 60000);
+  minimumTravelTime.setMinutes(minimumTravelTime.getMinutes() + 5);
+  travelInput.min = minimumTravelTime.toISOString().slice(0, 16);
+</script>
+{% endblock %}

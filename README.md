@@ -101,6 +101,12 @@ python app.py
 
 Open `http://127.0.0.1:5000`. `python app.py` uses the production-ready Waitress server on Windows, so Flask's development-server warning is not shown. Set `FLASK_DEBUG=1` only when you need Flask's development debugger and automatic reload.
 
+## Finding a passenger
+
+On the ride form, search for a place and choose the result whose address is in the correct area. Search results are suggestions; the first result may be a different place with the same name. You can also choose **Choose pickup on map** or **Choose destination on map** and click the map, or use your current location if the browser grants permission. Check the colored pins and selected addresses before creating the ride.
+
+For a match, use two different accounts. Both rides must be waiting; pickup points must be within 5 km, travel times within 30 minutes, and both sharing preferences must accept each other. After the second passenger creates a ride, return to the first passenger's match page and choose **Refresh matches**. If no match appears, that page explains which checks excluded the waiting rides.
+
 The `instance` directory and `rickshaw_share.db` schema initialize automatically on first startup; no retraining or separate migration command is required. To use another database location, set `DATABASE_URL` (for example `sqlite:///C:/path/rickshaw_share.db`).
 
 ## Verification

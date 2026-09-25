@@ -1,1 +1,60 @@
-{% extends 'base.html' %}{% block title %}Matches · Rickshaw Share{% endblock %}{% block content %}<div class="page-head"><div><span class="eyebrow">AI RESULTS</span><h1>Best passenger matches</h1><p>Suitable candidates, ranked by model probability.</p></div><a class="button secondary" href="{{ url_for('dashboard') }}">Dashboard</a></div>{% if results %}<div class="match-list">{% for item in results %}<article class="card match-card"><div><div class="avatar">{{ item.ride.user.name[0]|upper }}</div><h2>{{ item.ride.user.name }}</h2><p>{{ item.ride.pickup_name }} → {{ item.ride.destination_name }}</p></div><div class="probability"><strong>{{ '%.0f'|format(item.probability*100) }}%</strong><span>match</span></div><div class="metrics"><span><b>{{ '%.2f'|format(item.features.pickup_distance_km) }} km</b> pickups</span><span><b>{{ '%.0f'|format(item.features.time_difference_min) }} min</b> time gap</span><span><b>{{ '%.0f'|format(item.features.route_overlap_percent) }}%</b> overlap</span><span><b>{{ '%.2f'|format(item.estimated_detour_km) }} km</b> detour</span><span><b>Yes</b> preference</span></div><form method="post" action="{{ url_for('propose_match',ride_id=ride.ride_id,candidate_id=item.ride.ride_id) }}"><button>Send match request</button></form></article>{% endfor %}</div>{% else %}<section class="empty"><span>🔎</span><h2>No suitable passenger found</h2><p>Keep the ride active and try again when more passengers join.</p><a class="button secondary" href="{{ url_for('dashboard') }}">Back to dashboard</a></section>{% endif %}{% endblock %}
+{% extends 'base.html' %}
+{% block title %}Ride matches · Rickshaw Share{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div><span class="eyebrow">YOUR RIDE</span><h1>Passenger matches</h1>
+    <p>Nearby riders travelling at a similar time, ranked by the matching model.</p></div>
+  <a class="button secondary" href="{{ url_for('dashboard') }}">Dashboard</a>
+</div>
+<div class="ride-summary">
+  <span><b>Pickup</b> {{ ride.pickup_name }}</span>
+  <span><b>Destination</b> {{ ride.destination_name }}</span>
+  <span><b>Travel time</b> {{ ride.preferred_time.strftime('%d %b, %I:%M %p') }}</span>
+</div>
+
+{% if results %}
+  <div class="match-diagnostics">
+    <h2>{{ results|length }} suitable passenger{{ '' if results|length == 1 else 's' }} found</h2>
+    <p>Choose a rider to send them a match request. The shared ride starts after they accept.</p>
+  </div>
+  <div class="match-list">
+    {% for item in results %}
+    <article class="card match-card">
+      <div><div class="avatar">{{ item.ride.user.name[0]|upper }}</div><h2>{{ item.ride.user.name }}</h2>
+        <p>{{ item.ride.pickup_name }} → {{ item.ride.destination_name }}</p>
+        <p>{{ item.ride.preferred_time.strftime('%d %b, %I:%M %p') }}</p></div>
+      <div class="probability"><strong>{{ '%.0f'|format(item.probability*100) }}%</strong><span>match score</span></div>
+      <div class="metrics">
+        <span><b>{{ '%.2f'|format(item.features.pickup_distance_km) }} km</b> between pickups</span>
+        <span><b>{{ '%.0f'|format(item.features.time_difference_min) }} min</b> time apart</span>
+        <span><b>{{ '%.0f'|format(item.features.route_overlap_percent) }}%</b> route overlap</span>
+        <span><b>{{ '%.2f'|format(item.estimated_detour_km) }} km</b> estimated detour</span>
+      </div>
+      <form method="post" action="{{ url_for('propose_match',ride_id=ride.ride_id,candidate_id=item.ride.ride_id) }}">
+        <button>Send match request</button>
+      </form>
+    </article>
+    {% endfor %}
+  </div>
+{% else %}
+  <section class="match-diagnostics">
+    <h2>No suitable passenger found yet</h2>
+    {% if diagnostics.candidate_count == 0 %}
+      <p>No other passenger currently has an active, waiting ride. Ask them to create a ride request, then refresh this page.</p>
+    {% else %}
+      <p>{{ diagnostics.candidate_count }} other waiting ride{{ '' if diagnostics.candidate_count == 1 else 's' }} checked. Here is why they did not qualify:</p>
+      <ul>
+        {% if diagnostics.excluded.preference %}<li>{{ diagnostics.excluded.preference }} ride{{ '' if diagnostics.excluded.preference == 1 else 's' }}: sharing preferences do not match both passengers.</li>{% endif %}
+        {% if diagnostics.excluded.distance %}<li>{{ diagnostics.excluded.distance }} ride{{ '' if diagnostics.excluded.distance == 1 else 's' }}: pickup is more than 5 km away.</li>{% endif %}
+        {% if diagnostics.excluded.time %}<li>{{ diagnostics.excluded.time }} ride{{ '' if diagnostics.excluded.time == 1 else 's' }}: travel times are more than 30 minutes apart.</li>{% endif %}
+        {% if diagnostics.excluded.model %}<li>{{ diagnostics.excluded.model }} ride{{ '' if diagnostics.excluded.model == 1 else 's' }}: the match model did not consider the route pair suitable.</li>{% endif %}
+      </ul>
+      <p>For a quick test, use two different accounts, set pickup pins within 1 km, choose travel times 5 minutes apart, and select “Anyone” for both preferences.</p>
+    {% endif %}
+    <div class="actions">
+      <a class="button" href="{{ url_for('match_results',ride_id=ride.ride_id) }}">Refresh matches</a>
+      <a class="button secondary" href="{{ url_for('dashboard') }}">Back to dashboard</a>
+    </div>
+  </section>
+{% endif %}
+{% endblock %}

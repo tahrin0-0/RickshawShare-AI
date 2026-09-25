@@ -82,8 +82,13 @@ def register_ride_routes(app):
     @login_required
     def match_results(ride_id):
         ride = get_owned_ride(ride_id)
-        results = find_matches(ride) if ride.status == "waiting" else []
-        return render_template("matches.html", ride=ride, results=results)
+        if ride.status == "waiting":
+            results, diagnostics = find_matches(ride, with_diagnostics=True)
+        else:
+            results, diagnostics = [], {"candidate_count": 0, "excluded": {}}
+        return render_template(
+            "matches.html", ride=ride, results=results, diagnostics=diagnostics
+        )
 
     @app.post("/rides/<int:ride_id>/matches/<int:candidate_id>")
     @login_required
